@@ -1,0 +1,1478 @@
+<!DOCTYPE html>
+<html lang="bn">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>পারিবারিক বৃক্ষ</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@500;700&family=Hind+Siliguri:wght@300;400;500&display=swap');
+
+        :root {
+            --bg: #0b0b0d;
+            --surface: #111116;
+            --card: #18181f;
+            --border: #252530;
+            --gold: #c9a96e;
+            --gold2: #7a5c30;
+            --blue: #3a5a80;
+            --pink: #80383a;
+            --text: #ede8df;
+            --muted: #5a5460;
+            --dim: #2e2c36;
+            --lp: #2a2820;
+            --lc: #6a4020;
+            --glow: rgba(201, 169, 110, .13);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: var(--bg);
+            color: var(--text);
+            font-family: 'Hind Siliguri', sans-serif;
+            overflow: hidden;
+            height: 100vh;
+            width: 100vw;
+        }
+
+        /* TOPBAR */
+        .topbar {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 300;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 18px;
+            background: rgba(11, 11, 13, .96);
+            backdrop-filter: blur(16px);
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tb-l {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tb-title {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.05rem;
+            color: var(--gold);
+            font-weight: 700;
+        }
+
+        .tb-sub {
+            font-size: .68rem;
+            color: var(--muted);
+            margin-top: 1px;
+        }
+
+        .tb-r {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+
+        .btn {
+            padding: 5px 12px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-family: 'Hind Siliguri', sans-serif;
+            font-size: .78rem;
+            cursor: pointer;
+            transition: .2s;
+        }
+
+        .btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .btn.g {
+            background: var(--gold);
+            color: #0b0b0d;
+            border-color: var(--gold);
+            font-weight: 600;
+        }
+
+        .btn.g:hover {
+            background: #d4b07e;
+        }
+
+        .zdsp {
+            font-size: .72rem;
+            color: var(--muted);
+            background: var(--card);
+            border: 1px solid var(--border);
+            padding: 4px 9px;
+            border-radius: 6px;
+            min-width: 48px;
+            text-align: center;
+        }
+
+        /* CANVAS */
+        #canvas {
+            position: fixed;
+            top: 50px;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            overflow: hidden;
+            cursor: grab;
+        }
+
+        #canvas.drag {
+            cursor: grabbing;
+        }
+
+        #world {
+            position: absolute;
+            transform-origin: 0 0;
+        }
+
+        /* SVG */
+        #svgl {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 7200px;
+            height: 1350px;
+            pointer-events: none;
+            overflow: visible;
+        }
+
+        .lp {
+            fill: none;
+            stroke: var(--lp);
+            stroke-width: 2;
+        }
+
+        .lc {
+            fill: none;
+            stroke: var(--lc);
+            stroke-width: 2.5;
+        }
+
+        /* CARD */
+        .card {
+            position: absolute;
+            width: 128px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 13px;
+            padding: 12px 9px 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: border-color .2s, box-shadow .2s, transform .15s;
+            user-select: none;
+        }
+
+        .card:hover {
+            border-color: var(--gold);
+            box-shadow: 0 0 22px var(--glow), 0 4px 14px rgba(0, 0, 0, .5);
+            transform: translateY(-2px) scale(1.03);
+            z-index: 20;
+        }
+
+        .card.sel {
+            border-color: var(--gold);
+            box-shadow: 0 0 28px var(--glow);
+            z-index: 25;
+        }
+
+        .av {
+            width: 56px;
+            height: 56px;
+            border-radius: 50%;
+            margin: 0 auto 7px;
+            overflow: hidden;
+            border: 2px solid var(--border);
+            background: var(--surface);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.4rem;
+            transition: border-color .2s;
+        }
+
+        .card:hover .av,
+        .card.sel .av {
+            border-color: var(--gold);
+        }
+
+        .av img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .card.m .av {
+            border-color: #253545;
+        }
+
+        .card.f .av {
+            border-color: #452525;
+        }
+
+        .card.m:hover .av,
+        .card.m.sel .av {
+            border-color: #5b7fa6;
+        }
+
+        .card.f:hover .av,
+        .card.f.sel .av {
+            border-color: #b06060;
+        }
+
+        .cn {
+            font-size: .8rem;
+            font-weight: 500;
+            color: var(--text);
+            line-height: 1.25;
+        }
+
+        .cr {
+            font-size: .63rem;
+            color: var(--gold);
+            margin-top: 3px;
+        }
+
+        .cy {
+            font-size: .6rem;
+            color: var(--muted);
+            margin-top: 2px;
+        }
+
+        .badge {
+            display: inline-block;
+            font-size: .52rem;
+            padding: 1px 5px;
+            border-radius: 8px;
+            margin-top: 3px;
+            background: rgba(201, 169, 110, .1);
+            color: var(--gold);
+            border: 1px solid rgba(201, 169, 110, .2);
+        }
+
+        .badge.b2 {
+            background: rgba(90, 90, 160, .1);
+            color: #8888cc;
+            border-color: rgba(90, 90, 160, .2);
+        }
+
+        /* GEN LABELS — world-space strips */
+        .gl {
+            position: absolute;
+            left: 0;
+            right: 0;
+            font-size: .6rem;
+            color: rgba(255, 255, 255, .13);
+            letter-spacing: .12em;
+            text-transform: uppercase;
+            pointer-events: none;
+            text-align: center;
+            padding: 4px 0;
+            border-top: 1px solid rgba(255, 255, 255, .04);
+            white-space: nowrap;
+        }
+
+        /* highlight classes */
+        .card.hl-self {
+            border-color: var(--gold) !important;
+            box-shadow: 0 0 28px rgba(201, 169, 110, .5) !important;
+            z-index: 25;
+        }
+
+        .card.hl-child {
+            border-color: #5b9e5b !important;
+            box-shadow: 0 0 18px rgba(91, 158, 91, .35) !important;
+            z-index: 22;
+        }
+
+        .card.hl-dim {
+            opacity: .25;
+            filter: grayscale(.6);
+        }
+
+        .lp.hl-path {
+            stroke: #5b9e5b !important;
+            stroke-width: 3 !important;
+            opacity: .8;
+        }
+
+        .lp.dim-path {
+            opacity: .1 !important;
+        }
+
+        .lc.dim-path {
+            opacity: .1 !important;
+        }
+
+        /* POPUP — ছোট বাবল যেটা কার্ডের উপরে আসে */
+        .popup {
+            position: absolute;
+            z-index: 300;
+            background: rgba(20, 20, 28, .97);
+            border: 1px solid var(--gold);
+            border-radius: 12px;
+            padding: 10px 12px 9px;
+            min-width: 148px;
+            text-align: center;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, .7), 0 0 18px rgba(201, 169, 110, .18);
+            pointer-events: auto;
+            animation: popIn .15s cubic-bezier(.34, 1.56, .64, 1);
+        }
+
+        @keyframes popIn {
+            from {
+                opacity: 0;
+                transform: scale(.88) translateY(6px)
+            }
+
+            to {
+                opacity: 1;
+                transform: scale(1) translateY(0)
+            }
+        }
+
+        .popup::after {
+            content: '';
+            position: absolute;
+            bottom: -7px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 7px solid transparent;
+            border-top: 7px solid var(--gold);
+            border-bottom: 0;
+        }
+
+        .pu-name {
+            font-size: .82rem;
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: 2px;
+        }
+
+        .pu-role {
+            font-size: .62rem;
+            color: var(--gold);
+            margin-bottom: 8px;
+        }
+
+        .pu-btns {
+            display: flex;
+            gap: 6px;
+            justify-content: center;
+        }
+
+        .pu-btn {
+            padding: 5px 10px;
+            border-radius: 7px;
+            border: 1px solid var(--border);
+            background: var(--card);
+            color: var(--text);
+            font-family: 'Hind Siliguri', sans-serif;
+            font-size: .72rem;
+            cursor: pointer;
+            transition: .18s;
+            white-space: nowrap;
+        }
+
+        .pu-btn:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .pu-btn.primary {
+            background: var(--gold);
+            color: #0b0b0d;
+            border-color: var(--gold);
+            font-weight: 600;
+        }
+
+        .pu-btn.primary:hover {
+            background: #d4b07e;
+        }
+
+        .pu-cl {
+            position: absolute;
+            top: 5px;
+            right: 7px;
+            width: 18px;
+            height: 18px;
+            background: none;
+            border: none;
+            color: var(--muted);
+            cursor: pointer;
+            font-size: .75rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border-radius: 4px;
+            transition: .15s;
+        }
+
+        .pu-cl:hover {
+            color: var(--text);
+            background: rgba(255, 255, 255, .07);
+        }
+
+        /* MODAL — বিস্তারিত তথ্য */
+        .modal-bg {
+            position: fixed;
+            inset: 0;
+            z-index: 500;
+            background: rgba(0, 0, 0, .65);
+            backdrop-filter: blur(4px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .22s;
+        }
+
+        .modal-bg.open {
+            opacity: 1;
+            pointer-events: auto;
+        }
+
+        .modal {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 18px;
+            padding: 26px 24px 22px;
+            width: 300px;
+            max-width: 92vw;
+            max-height: 85vh;
+            overflow-y: auto;
+            position: relative;
+            box-shadow: 0 24px 64px rgba(0, 0, 0, .8);
+            transform: scale(.93);
+            transition: transform .22s cubic-bezier(.34, 1.3, .64, 1);
+        }
+
+        .modal-bg.open .modal {
+            transform: scale(1);
+        }
+
+        .mcl {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            width: 28px;
+            height: 28px;
+            border-radius: 7px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--muted);
+            cursor: pointer;
+            font-size: .9rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: .2s;
+        }
+
+        .mcl:hover {
+            color: var(--text);
+            border-color: var(--gold);
+        }
+
+        .mav {
+            width: 72px;
+            height: 72px;
+            border-radius: 50%;
+            margin: 0 auto 10px;
+            overflow: hidden;
+            border: 2.5px solid var(--gold);
+            background: var(--card);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.8rem;
+        }
+
+        .mav img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        .mname {
+            font-family: 'Playfair Display', serif;
+            font-size: 1.1rem;
+            text-align: center;
+            color: var(--text);
+        }
+
+        .mrole {
+            text-align: center;
+            color: var(--gold);
+            font-size: .73rem;
+            margin-top: 3px;
+            margin-bottom: 14px;
+        }
+
+        .mf {
+            margin-bottom: 10px;
+        }
+
+        .mf label {
+            display: block;
+            font-size: .6rem;
+            color: var(--muted);
+            text-transform: uppercase;
+            letter-spacing: .09em;
+            margin-bottom: 2px;
+        }
+
+        .mf p {
+            font-size: .83rem;
+            color: var(--text);
+            line-height: 1.45;
+        }
+
+        .mdiv {
+            border: none;
+            border-top: 1px solid var(--border);
+            margin: 11px 0;
+        }
+
+        /* MINIMAP */
+        #mm {
+            position: fixed;
+            bottom: 14px;
+            left: 14px;
+            width: 150px;
+            height: 94px;
+            background: rgba(17, 17, 22, .9);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            overflow: hidden;
+            pointer-events: none;
+            z-index: 150;
+        }
+
+        #mmvp {
+            position: absolute;
+            border: 1.5px solid var(--gold);
+            border-radius: 3px;
+            background: rgba(201, 169, 110, .05);
+        }
+
+        /* ZOOM */
+        .zbx {
+            position: fixed;
+            bottom: 14px;
+            right: 14px;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            z-index: 150;
+        }
+
+        .zb {
+            width: 32px;
+            height: 32px;
+            border-radius: 7px;
+            background: var(--card);
+            border: 1px solid var(--border);
+            color: var(--text);
+            font-size: 1.05rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: .2s;
+        }
+
+        .zb:hover {
+            border-color: var(--gold);
+            color: var(--gold);
+        }
+
+        .legend {
+            position: fixed;
+            top: 58px;
+            left: 12px;
+            z-index: 150;
+            background: rgba(17, 17, 22, .9);
+            border: 1px solid var(--border);
+            border-radius: 9px;
+            padding: 9px 12px;
+            backdrop-filter: blur(8px);
+        }
+
+        .lr {
+            display: flex;
+            align-items: center;
+            gap: 7px;
+            margin-bottom: 5px;
+            font-size: .63rem;
+            color: var(--muted);
+        }
+
+        .lr:last-child {
+            margin-bottom: 0;
+        }
+
+        .ld {
+            width: 9px;
+            height: 9px;
+            border-radius: 50%;
+        }
+
+        .ll {
+            width: 22px;
+            height: 2px;
+        }
+
+        .hint {
+            position: fixed;
+            bottom: 14px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: .67rem;
+            color: var(--muted);
+            background: rgba(17, 17, 22, .88);
+            padding: 5px 14px;
+            border-radius: 18px;
+            border: 1px solid var(--border);
+            pointer-events: none;
+            z-index: 150;
+            backdrop-filter: blur(6px);
+            white-space: nowrap;
+            margin-left: 90px;
+        }
+
+        ::-webkit-scrollbar {
+            width: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--border);
+            border-radius: 3px;
+        }
+
+        @media print {
+            body {
+                background: white !important;
+                -webkit-print-color-adjust: exact;
+                print-color-adjust: exact;
+            }
+
+            body.is-printing,
+            body.is-printing html {
+                width: auto !important;
+                height: auto !important;
+                overflow: visible !important;
+                position: relative !important;
+            }
+
+            body.is-printing #canvas {
+                position: relative !important;
+                overflow: visible !important;
+                top: 0 !important;
+                left: 0 !important;
+            }
+
+            body.is-printing #world {
+                position: relative !important;
+            }
+
+            .topbar,
+            .legend,
+            #mm,
+            .zbx,
+            .hint,
+            #popup-wrap {
+                display: none !important;
+            }
+
+            .card {
+                border-color: #555 !important;
+                box-shadow: none !important;
+                page-break-inside: avoid;
+            }
+
+            .card .av {
+                border-color: #555 !important;
+            }
+
+            .gl {
+                color: #555 !important;
+                border-top-color: #ccc !important;
+            }
+
+            @page {
+                margin: 10mm;
+                size: auto;
+            }
+        }
+    </style>
+    <!-- Add html2canvas library -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+</head>
+
+<body>
+
+    <script>
+        /* ════════════════════════════════
+           ✏️ পরিবারের নাম পরিবর্তন করো
+        ════════════════════════════════ */
+        const FAMILY_NAME = "আমাদের পরিবার";
+
+        /* ════════════════════════════════════════════════════════════════
+           📋 MEMBERS LIST
+           👉 name, born, died, photo, job, info — এগুলো তুমি পরিবর্তন করবে
+           ⚠️ id, role, gender, gen, x, y — পরিবর্তন করো না
+        ════════════════════════════════════════════════════════════════ */
+        const M = [
+
+            /* ─── GEN 0 : দাদা-দাদি ─── */
+            { id: 1, name: "দাদা", role: "দাদা", g: "m", gen: 0, x: 2420, y: 55, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 2, name: "দাদি", role: "দাদি", g: "f", gen: 0, x: 2580, y: 55, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : বড় মেয়ে ও স্বামী ─── */
+            { id: 10, name: "বড় মেয়ে", role: "দাদার বড় মেয়ে", g: "f", gen: 1, x: 80, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 11, name: "বড় মেয়ের স্বামী", role: "জামাই", g: "m", gen: 1, x: 230, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : ছোট মেয়ে ও স্বামী ─── */
+            { id: 12, name: "ছোট মেয়ে", role: "দাদার ছোট মেয়ে", g: "f", gen: 1, x: 520, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 13, name: "ছোট মেয়ের স্বামী", role: "জামাই", g: "m", gen: 1, x: 670, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : ১ম ছেলে ও বউ ─── */
+            { id: 14, name: "১ম ছেলে", role: "দাদার ১ম ছেলে", g: "m", gen: 1, x: 960, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 15, name: "১ম ছেলের বউ", role: "বউ", g: "f", gen: 1, x: 1110, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : ২য় ছেলে ও বউ ─── */
+            { id: 16, name: "২য় ছেলে", role: "দাদার ২য় ছেলে", g: "m", gen: 1, x: 1560, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 17, name: "২য় ছেলের বউ", role: "বউ", g: "f", gen: 1, x: 1710, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : ৩য় ছেলে ও বউ ─── */
+            { id: 18, name: "৩য় ছেলে", role: "দাদার ৩য় ছেলে", g: "m", gen: 1, x: 2240, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 19, name: "৩য় ছেলের বউ", role: "বউ", g: "f", gen: 1, x: 2390, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : ৪র্থ ছেলে ও বউ ─── */
+            { id: 20, name: "৪র্থ ছেলে", role: "দাদার ৪র্থ ছেলে", g: "m", gen: 1, x: 2960, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 21, name: "৪র্থ ছেলের বউ", role: "বউ", g: "f", gen: 1, x: 3110, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ─── GEN 1 : ৫ম ছেলে ও বউ ─── */
+            { id: 22, name: "৫ম ছেলে", role: "দাদার ৫ম ছেলে", g: "m", gen: 1, x: 3590, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 23, name: "৫ম ছেলের বউ", role: "বউ", g: "f", gen: 1, x: 3740, y: 250, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ════ GEN 2 ════ */
+
+            /* বড় মেয়ের ৩ ছেলে ৩ মেয়ে */
+            { id: 30, name: "বড় ছেলে", role: "নাতি (বিবাহিত)", g: "m", gen: 2, x: 30, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 31, name: "বড় ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 175, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 32, name: "মেজ ছেলে", role: "নাতি (বিবাহিত,নিঃসন্তান)", g: "m", gen: 2, x: 320, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত", nc: true },
+            { id: 33, name: "মেজ ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 465, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 34, name: "ছোট ছেলে", role: "নাতি (অবিবাহিত)", g: "m", gen: 2, x: 610, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "অবিবাহিত" },
+            { id: 35, name: "১ম মেয়ে", role: "নাতনি", g: "f", gen: 2, x: 750, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 36, name: "২য় মেয়ে", role: "নাতনি", g: "f", gen: 2, x: 890, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 37, name: "৩য় মেয়ে", role: "নাতনি", g: "f", gen: 2, x: 1030, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ছোট মেয়ের ১ মেয়ে */
+            { id: 39, name: "একমাত্র মেয়ে", role: "নাতনি", g: "f", gen: 2, x: 1360, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ১ম ছেলের ২ ছেলে ১ মেয়ে */
+            { id: 40, name: "বড় ছেলে", role: "নাতি", g: "m", gen: 2, x: 1520, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 41, name: "বড় ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 1665, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 42, name: "ছোট ছেলে", role: "নাতি (বিবাহিত)", g: "m", gen: 2, x: 1810, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 43, name: "ছোট ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 1955, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ২য় ছেলের ৩ ছেলে */
+            { id: 46, name: "বড় ছেলে", role: "নাতি", g: "m", gen: 2, x: 2440, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 47, name: "মেজ ছেলে", role: "নাতি", g: "m", gen: 2, x: 2580, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 48, name: "ছোট ছেলে", role: "নাতি", g: "m", gen: 2, x: 2720, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৩য় ছেলের ২ ছেলে ৩ মেয়ে */
+            { id: 49, name: "বড় মেয়ে", role: "নাতনি (বিবাহিত)", g: "f", gen: 2, x: 2890, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 50, name: "বড় মেয়ের স্বামী", role: "জামাই", g: "m", gen: 2, x: 3035, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 51, name: "মেজ মেয়ে", role: "নাতনি (বিবাহিত)", g: "f", gen: 2, x: 3180, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 52, name: "মেজ মেয়ের স্বামী", role: "জামাই", g: "m", gen: 2, x: 3325, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 53, name: "ছোট মেয়ে", role: "নাতনি (বিবাহিত)", g: "f", gen: 2, x: 3470, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 54, name: "ছোট মেয়ের স্বামী", role: "জামাই", g: "m", gen: 2, x: 3615, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 55, name: "বড় ছেলে", role: "নাতি (বিবাহিত)", g: "m", gen: 2, x: 3760, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 56, name: "বড় ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 3905, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 57, name: "ছোট ছেলে", role: "নাতি (অবিবাহিত)", g: "m", gen: 2, x: 4050, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "অবিবাহিত" },
+
+            /* ৪র্থ ছেলের ৩ ছেলে ১ মেয়ে */
+            { id: 58, name: "মেয়ে (বিবাহিত)", role: "নাতনি", g: "f", gen: 2, x: 4230, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 59, name: "মেয়ের স্বামী", role: "জামাই", g: "m", gen: 2, x: 4375, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 60, name: "বড় ছেলে", role: "নাতি (বিবাহিত)", g: "m", gen: 2, x: 4520, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 61, name: "বড় ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 4665, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 62, name: "২য় ছেলে", role: "নাতি (অবিবাহিত)", g: "m", gen: 2, x: 4810, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "অবিবাহিত" },
+            { id: 63, name: "ছোট ছেলে", role: "নাতি (অবিবাহিত)", g: "m", gen: 2, x: 4950, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "অবিবাহিত" },
+
+            /* ৫ম ছেলের ২ ছেলে ১ মেয়ে */
+            { id: 64, name: "মেয়ে (বিবাহিত)", role: "নাতনি", g: "f", gen: 2, x: 5130, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 65, name: "মেয়ের স্বামী", role: "জামাই", g: "m", gen: 2, x: 5275, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 66, name: "বড় ছেলে", role: "নাতি (বিবাহিত)", g: "m", gen: 2, x: 5420, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 67, name: "বড় ছেলের বউ", role: "নাতবউ", g: "f", gen: 2, x: 5565, y: 480, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 68, name: "ছোট ছেলে", role: "নাতি (অবিবাহিত)", g: "m", gen: 2, x: 5710, y: 480, born: "", died: "", photo: "", job: "", info: "", ms: "অবিবাহিত" },
+
+            /* ════ GEN 3 ════ */
+
+            /* বড় মেয়ের বড় ছেলের ২ সন্তান */
+            { id: 100, name: "১ম সন্তান", role: "প্রপৌত্র/ত্রী", g: "m", gen: 3, x: 30, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 101, name: "২য় সন্তান", role: "প্রপৌত্র/ত্রী", g: "f", gen: 3, x: 175, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ১ম ছেলের বড় ছেলের ২ ছেলে ১ মেয়ে */
+            { id: 110, name: "১ম ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 450, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 111, name: "২য় ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 590, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 112, name: "মেয়ে (বিবাহিত)", role: "প্রপৌত্রী", g: "f", gen: 3, x: 730, y: 720, born: "", died: "", photo: "", job: "", info: "", ms: "বিবাহিত" },
+            { id: 113, name: "মেয়ের স্বামী", role: "জামাই", g: "m", gen: 3, x: 875, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ১ম ছেলের ছোট ছেলের ১ ছেলে ১ মেয়ে */
+            { id: 120, name: "ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 1070, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 121, name: "মেয়ে", role: "প্রপৌত্রী", g: "f", gen: 3, x: 1210, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ১ম ছেলের মেয়ের ৩ ছেলে */
+
+            /* ২য় ছেলের বড় ছেলের ১ ছেলে ১ মেয়ে */
+            { id: 140, name: "ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 1870, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 141, name: "মেয়ে", role: "প্রপৌত্রী", g: "f", gen: 3, x: 2010, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ২য় ছেলের মেজ ছেলের ১ মেয়ে */
+            { id: 150, name: "মেয়ে", role: "প্রপৌত্রী", g: "f", gen: 3, x: 2190, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ২য় ছেলের ছোট ছেলের ১ ছেলে */
+            { id: 160, name: "ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 2370, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৩য় ছেলের বড় মেয়ের ১ সন্তান */
+            { id: 170, name: "সন্তান", role: "নাতি/নাতনি", g: "m", gen: 3, x: 2550, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৩য় ছেলের মেজ মেয়ের ২ সন্তান */
+            { id: 180, name: "১ম সন্তান", role: "নাতি/নাতনি", g: "m", gen: 3, x: 2730, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 181, name: "২য় সন্তান", role: "নাতি/নাতনি", g: "f", gen: 3, x: 2870, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৩য় ছেলের ছোট মেয়ের ৩ সন্তান */
+            { id: 190, name: "১ম সন্তান", role: "নাতি/নাতনি", g: "m", gen: 3, x: 3060, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 191, name: "২য় সন্তান", role: "নাতি/নাতনি", g: "f", gen: 3, x: 3200, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 192, name: "৩য় সন্তান", role: "নাতি/নাতনি", g: "m", gen: 3, x: 3340, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৩য় ছেলের বড় ছেলের ২ ছেলে */
+            { id: 200, name: "১ম ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 3530, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 201, name: "২য় ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 3670, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৪র্থ ছেলের মেয়ের ২ সন্তান */
+            { id: 210, name: "১ম সন্তান", role: "নাতি/নাতনি", g: "m", gen: 3, x: 3860, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 211, name: "২য় সন্তান", role: "নাতি/নাতনি", g: "f", gen: 3, x: 4000, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৪র্থ ছেলের বড় ছেলের ১ মেয়ে */
+            { id: 220, name: "মেয়ে", role: "প্রপৌত্রী", g: "f", gen: 3, x: 4190, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৫ম ছেলের মেয়ের ২ সন্তান */
+            { id: 230, name: "১ম সন্তান", role: "নাতি/নাতনি", g: "m", gen: 3, x: 4380, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+            { id: 231, name: "২য় সন্তান", role: "নাতি/নাতনি", g: "f", gen: 3, x: 4520, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+            /* ৫ম ছেলের বড় ছেলের ১ সন্তান */
+            { id: 240, name: "সন্তান", role: "প্রপৌত্র/ত্রী", g: "m", gen: 3, x: 4710, y: 720, born: "", died: "", photo: "", job: "", info: "" },
+
+
+            { id: 110, name: "১ম ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 450, y: 720 },
+            { id: 111, name: "২য় ছেলে", role: "প্রপৌত্র", g: "m", gen: 3, x: 590, y: 720 },
+            { id: 112, name: "মেয়ে (বিবাহিত)", role: "প্রপৌত্রী", g: "f", gen: 3, x: 730, y: 720, ms: "বিবাহিত" },
+            { id: 113, name: "মেয়ের স্বামী", role: "জামাই", g: "m", gen: 3, x: 875, y: 720 },
+
+            { id: 300, name: "১ম ছেলে", role: "চতুর্থ প্রজন্ম", g: "m", gen: 4, x: 730, y: 960 },
+            { id: 301, name: "২য় ছেলে", role: "চতুর্থ প্রজন্ম", g: "m", gen: 4, x: 870, y: 960 },
+            { id: 302, name: "৩য় ছেলে", role: "চতুর্থ প্রজন্ম", g: "m", gen: 4, x: 1010, y: 960 },
+
+            /* ════ GEN 4 — ১ম ছেলের মেয়ের ছেলের ৩ সন্তান ════ */
+        ];
+
+        /* ════ CONNECTIONS ════ */
+        const C = [
+            /* GEN0 দম্পতি */
+            { t: "c", a: 1, b: 2 },
+
+            /* দাদা → সন্তান */
+            { t: "p", p: 1, c: 10 }, { t: "p", p: 1, c: 12 },
+            { t: "p", p: 1, c: 14 }, { t: "p", p: 1, c: 16 },
+            { t: "p", p: 1, c: 18 }, { t: "p", p: 1, c: 20 }, { t: "p", p: 1, c: 22 },
+
+            /* GEN1 দম্পতি */
+            { t: "c", a: 10, b: 11 }, { t: "c", a: 12, b: 13 },
+            { t: "c", a: 14, b: 15 }, { t: "c", a: 16, b: 17 },
+            { t: "c", a: 18, b: 19 }, { t: "c", a: 20, b: 21 }, { t: "c", a: 22, b: 23 },
+
+            /* বড় মেয়ের সন্তান */
+            { t: "p", p: 10, c: 30 }, { t: "p", p: 10, c: 32 }, { t: "p", p: 10, c: 34 },
+            { t: "p", p: 10, c: 35 }, { t: "p", p: 10, c: 36 }, { t: "p", p: 10, c: 37 },
+            { t: "c", a: 30, b: 31 }, { t: "c", a: 32, b: 33 },
+
+            /* ছোট মেয়ের সন্তান */
+            { t: "p", p: 12, c: 39 },
+
+            /* ১ম ছেলের সন্তান */
+            { t: "p", p: 14, c: 40 }, { t: "p", p: 14, c: 42 },
+            { t: "c", a: 40, b: 41 }, { t: "c", a: 42, b: 43 },
+
+            /* ২য় ছেলের সন্তান */
+            { t: "p", p: 16, c: 46 }, { t: "p", p: 16, c: 47 }, { t: "p", p: 16, c: 48 },
+
+            /* ৩য় ছেলের সন্তান */
+            { t: "p", p: 18, c: 49 }, { t: "p", p: 18, c: 51 }, { t: "p", p: 18, c: 53 },
+            { t: "p", p: 18, c: 55 }, { t: "p", p: 18, c: 57 },
+            { t: "c", a: 49, b: 50 }, { t: "c", a: 51, b: 52 }, { t: "c", a: 53, b: 54 }, { t: "c", a: 55, b: 56 },
+
+            /* ৪র্থ ছেলের সন্তান */
+            { t: "p", p: 20, c: 58 }, { t: "p", p: 20, c: 60 }, { t: "p", p: 20, c: 62 }, { t: "p", p: 20, c: 63 },
+            { t: "c", a: 58, b: 59 }, { t: "c", a: 60, b: 61 },
+
+            /* ৫ম ছেলের সন্তান */
+            { t: "p", p: 22, c: 64 }, { t: "p", p: 22, c: 66 }, { t: "p", p: 22, c: 68 },
+            { t: "c", a: 64, b: 65 }, { t: "c", a: 66, b: 67 },
+
+            /* GEN3 — বড় মেয়ে → বড় ছেলে → সন্তান */
+            { t: "p", p: 30, c: 100 }, { t: "p", p: 30, c: 101 },
+
+            /* GEN3 — ১ম ছেলের বড় ছেলের সন্তান */
+
+            { t: "p", p: 40, c: 110 }, { t: "p", p: 40, c: 111 }, { t: "p", p: 40, c: 112 },
+            { t: "c", a: 112, b: 113 },
+            { t: "p", p: 112, c: 300 }, { t: "p", p: 112, c: 301 }, { t: "p", p: 112, c: 302 },
+
+            { t: "p", p: 40, c: 110 }, { t: "p", p: 40, c: 111 }, { t: "p", p: 40, c: 112 },
+            { t: "c", a: 112, b: 113 },
+
+            /* GEN3 — ১ম ছেলের ছোট ছেলের সন্তান */
+            { t: "p", p: 42, c: 120 }, { t: "p", p: 42, c: 121 },
+
+            /* GEN3 — ১ম ছেলের মেয়ের সন্তান */
+
+
+            /* GEN3 — ২য় ছেলের সন্তান */
+            { t: "p", p: 46, c: 140 }, { t: "p", p: 46, c: 141 },
+            { t: "p", p: 47, c: 150 },
+            { t: "p", p: 48, c: 160 },
+
+            /* GEN3 — ৩য় ছেলের মেয়েদের সন্তান */
+            { t: "p", p: 49, c: 170 },
+            { t: "p", p: 51, c: 180 }, { t: "p", p: 51, c: 181 },
+            { t: "p", p: 53, c: 190 }, { t: "p", p: 53, c: 191 }, { t: "p", p: 53, c: 192 },
+
+            /* GEN3 — ৩য় ছেলের বড় ছেলের সন্তান */
+            { t: "p", p: 55, c: 200 }, { t: "p", p: 55, c: 201 },
+
+            /* GEN3 — ৪র্থ ছেলের মেয়ের সন্তান */
+            { t: "p", p: 58, c: 210 }, { t: "p", p: 58, c: 211 },
+
+            /* GEN3 — ৪র্থ ছেলের বড় ছেলের সন্তান */
+            { t: "p", p: 60, c: 220 },
+
+            /* GEN3 — ৫ম ছেলের মেয়ের সন্তান */
+            { t: "p", p: 64, c: 230 }, { t: "p", p: 64, c: 231 },
+
+            /* GEN3 — ৫ম ছেলের বড় ছেলের সন্তান */
+            { t: "p", p: 66, c: 240 },
+
+            /* GEN4 — ১ম ছেলের মেয়ের ছেলের সন্তান (৩ ছেলে) */
+
+        ];
+    </script>
+
+    <!-- UI -->
+    <div class="topbar">
+        <div class="tb-l">
+            <span style="font-size:1.3rem">🌳</span>
+            <div>
+                <div class="tb-title" id="tbt"></div>
+                <div class="tb-sub">পারিবারিক বৃক্ষ · <span id="mc"></span> জন সদস্য · ৫ প্রজন্ম</div>
+            </div>
+        </div>
+        <div class="tb-r">
+            <span class="zdsp" id="zdsp">100%</span>
+            <button class="btn g" onclick="downloadImage()">📸 Save Image</button>
+            <button class="btn" onclick="printTree()">🖨 Print</button>
+            <button class="btn" onclick="fitAll()">⊡ Fit</button>
+            <button class="btn" onclick="resetV()">↺ Reset</button>
+        </div>
+    </div>
+
+    <div class="legend">
+        <div class="lr">
+            <div class="ld" style="background:#3a5a80"></div>পুরুষ
+        </div>
+        <div class="lr">
+            <div class="ld" style="background:#80383a"></div>মহিলা
+        </div>
+        <div class="lr">
+            <div class="ll" style="background:#6a4020;height:2.5px"></div>দম্পতি
+        </div>
+        <div class="lr">
+            <div class="ll" style="background:#2a2820"></div>সন্তান
+        </div>
+    </div>
+
+    <div id="canvas">
+        <div id="world">
+            <svg id="svgl"
+                style="position:absolute;top:0;left:0;width:6200px;height:1200px;pointer-events:none;overflow:visible;"></svg>
+            <!-- popup lives inside world, positioned per-card -->
+            <div id="popup-wrap" style="position:absolute;top:0;left:0;pointer-events:none;z-index:300;"></div>
+        </div>
+    </div>
+
+    <!-- modal overlay -->
+    <div class="modal-bg" id="modal-bg" onclick="bgClick(event)">
+        <div class="modal" id="modal">
+            <button class="mcl" onclick="closeModal()">✕</button>
+            <div class="mav" id="mav"></div>
+            <div class="mname" id="mnm"></div>
+            <div class="mrole" id="mrl"></div>
+            <hr class="mdiv">
+            <div class="mf"><label>বিবাহের অবস্থা</label>
+                <p id="mms">—</p>
+            </div>
+            <div class="mf"><label>জন্ম সাল</label>
+                <p id="mbo">—</p>
+            </div>
+            <div class="mf" id="mfd"><label>মৃত্যু সাল</label>
+                <p id="mdi">—</p>
+            </div>
+            <div class="mf"><label>পেশা</label>
+                <p id="mjb">—</p>
+            </div>
+            <div class="mf"><label>সন্তান সংখ্যা</label>
+                <p id="mch">—</p>
+            </div>
+            <hr class="mdiv">
+            <div class="mf"><label>তথ্য</label>
+                <p id="min">—</p>
+            </div>
+        </div>
+    </div>
+
+    <div id="mm"><canvas id="mmc" width="150" height="94"></canvas>
+        <div id="mmvp"></div>
+    </div>
+    <div class="zbx"><button class="zb" onclick="doZoom(1.18)">＋</button><button class="zb"
+            onclick="doZoom(.85)">－</button></div>
+    <div class="hint">🖱 ড্র্যাগ · স্ক্রোল জুম · কার্ড ক্লিক = বিস্তারিত ও বংশধর হাইলাইট · ESC = বাতিল</div>
+
+    <script>
+        const CARD_W = 128, CARD_H = 116;
+        const GEN_Y = [55, 250, 480, 720, 960];
+        const GEN_LBL = ["প্রজন্ম ১ — দাদা-দাদি", "প্রজন্ম ২ — ছেলে-মেয়ে", "প্রজন্ম ৩ — নাতি-নাতনি", "প্রজন্ম ৪ — প্রপৌত্র/নাতি", "প্রজন্ম ৫"];
+
+        document.getElementById('tbt').textContent = FAMILY_NAME;
+        document.getElementById('mc').textContent = M.length;
+
+        const world = document.getElementById('world');
+        const canvas = document.getElementById('canvas');
+        const svg = document.getElementById('svgl');
+        let sc = 1, tx = 0, ty = 0, drag = false, sx, sy, stx, sty;
+
+        /* build map */
+        const mp = {};
+        M.forEach(m => { if (!mp[m.id]) mp[m.id] = m; });
+        const mem = Object.values(mp);
+
+        /* cards */
+        const els = {};
+        mem.forEach(m => {
+            const d = document.createElement('div');
+            d.className = `card ${m.g === 'f' ? 'f' : 'm'}`;
+            d.style.left = m.x + 'px'; d.style.top = m.y + 'px';
+            const emo = m.g === 'f' ? '👩' : '👨';
+            const av = m.photo ? `<img src="${m.photo}" alt="" onerror="this.innerHTML='${emo}'">` : emo;
+            let bgs = '';
+            if (m.ms === 'অবিবাহিত') bgs += '<div class="badge">অবিবাহিত</div>';
+            if (m.nc) bgs += '<div class="badge b2">নিঃসন্তান</div>';
+            const yr = m.born || m.died ? `${m.born || ''}${m.died ? ' – ' + m.died : ''}` : '';
+            d.innerHTML = `<div class="av">${av}</div><div class="cn">&thinsp;${m.name}&thinsp;</div><div class="cr">${m.role}</div>${yr ? `<div class="cy">${yr}</div>` : ''}${bgs}`;
+            d.onclick = () => openP(m);
+            world.appendChild(d);
+            els[m.id] = d;
+        });
+
+        /* lines */
+        function drawL(hlId, desc, spouses) {
+            while (svg.lastChild) svg.removeChild(svg.lastChild);
+            const cx = m => m.x + CARD_W / 2, cy = m => m.y + CARD_H / 2;
+            const bot = m => m.y + CARD_H, top = m => m.y;
+            const hasHL = hlId !== undefined;
+            C.forEach(c => {
+                if (c.t === 'c') {
+                    const a = mp[c.a], b = mp[c.b]; if (!a || !b) return;
+                    const x1 = cx(a), y1 = cy(a), x2 = cx(b), y2 = cy(b);
+                    const isDim = hasHL && c.a !== hlId && c.b !== hlId;
+                    addP(`M${x1},${y1}L${x2},${y2}`, 'lc' + (isDim ? ' dim-path' : ''));
+                    if (!isDim) {
+                        const ttx = (x1 + x2) / 2, tty = (y1 + y2) / 2;
+                        const t = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+                        t.setAttribute('x', ttx); t.setAttribute('y', tty + 4);
+                        t.setAttribute('text-anchor', 'middle'); t.setAttribute('font-size', '10');
+                        t.setAttribute('fill', '#8b6040'); t.textContent = '♥'; svg.appendChild(t);
+                    }
+                } else {
+                    const p = mp[c.p], ch = mp[c.c]; if (!p || !ch) return;
+                    const px = cx(p), py = bot(p), chx = cx(ch), chy = top(ch);
+                    const my = (py + chy) / 2;
+                    const isHL = hasHL && (c.p === hlId || (desc && desc.has(c.p) && desc.has(c.c)));
+                    const isDim = hasHL && !isHL && !(c.p === hlId);
+                    addP(`M${px},${py}C${px},${my} ${chx},${my} ${chx},${chy}`, 'lp' + (isHL ? ' hl-path' : isDim ? ' dim-path' : ''));
+                }
+            });
+        }
+        function addP(d, cls) {
+            const p = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+            p.setAttribute('d', d); p.setAttribute('class', cls); p.setAttribute('fill', 'none');
+            svg.appendChild(p);
+        }
+        drawL();
+
+        /* gen labels — drawn in world space so they scroll/zoom with the tree */
+        const ROW_H = 240; // approximate row height in world px
+        GEN_Y.forEach((y, i) => {
+            if (!GEN_LBL[i]) return;
+            const d = document.createElement('div');
+            d.className = 'gl';
+            d.style.top = (y - 22) + 'px';
+            d.style.height = '22px';
+            d.style.lineHeight = '22px';
+            d.textContent = GEN_LBL[i];
+            world.appendChild(d);
+        });
+        function updGL() { /* nothing needed — labels move with world */ }
+
+        /* transform */
+        function applyT() { world.style.transform = `translate(${tx}px,${ty}px) scale(${sc})`; minimap(); }
+
+        /* ESC to clear */
+        window.addEventListener('keydown', e => { if (e.key === 'Escape') { closeModal(); hidePopup(); clearHL(); } });
+
+        /* pan */
+        let wasDragged = false;
+        canvas.addEventListener('mousedown', e => {
+            if (e.target.closest('.card') || e.target.closest('.popup')) return;
+            drag = true; wasDragged = false; sx = e.clientX; sy = e.clientY; stx = tx; sty = ty; canvas.classList.add('drag');
+        });
+        window.addEventListener('mousemove', e => {
+            if (!drag) return;
+            wasDragged = true;
+            tx = stx + e.clientX - sx; ty = sty + e.clientY - sy; applyT();
+        });
+        window.addEventListener('mouseup', () => { drag = false; canvas.classList.remove('drag'); });
+
+        /* click on canvas (not card) clears popup */
+        canvas.addEventListener('click', e => {
+            if (wasDragged) return; // avoid clearing after drag
+            if (!e.target.closest('.card') && !e.target.closest('.popup') && !document.getElementById('modal-bg').classList.contains('open')) {
+                hidePopup();
+                clearHL();
+            }
+        });
+
+        /* touch */
+        let ts0;
+        canvas.addEventListener('touchstart', e => { if (e.touches.length === 1) ts0 = { x: e.touches[0].clientX, y: e.touches[0].clientY, tx, ty }; }, { passive: true });
+        canvas.addEventListener('touchmove', e => { if (e.touches.length === 1 && ts0) { tx = ts0.tx + e.touches[0].clientX - ts0.x; ty = ts0.ty + e.touches[0].clientY - ts0.y; applyT(); } }, { passive: true });
+
+        /* wheel */
+        canvas.addEventListener('wheel', e => {
+            e.preventDefault();
+            const d = e.deltaY > 0 ? .88 : 1.13;
+            const r = canvas.getBoundingClientRect();
+            const mx = e.clientX - r.left, my = e.clientY - r.top;
+            tx = mx - (mx - tx) * d; ty = my - (my - ty) * d; sc = Math.min(Math.max(sc * d, .1), 2.5);
+            applyT(); document.getElementById('zdsp').textContent = Math.round(sc * 100) + '%';
+        }, { passive: false });
+
+        function doZoom(d) {
+            const r = canvas.getBoundingClientRect();
+            const cx = r.width / 2, cy = r.height / 2;
+            tx = cx - (cx - tx) * d; ty = cy - (cy - ty) * d; sc = Math.min(Math.max(sc * d, .1), 2.5);
+            applyT(); document.getElementById('zdsp').textContent = Math.round(sc * 100) + '%';
+        }
+
+        function fitAll() {
+            const xs = mem.map(m => m.x), ys = mem.map(m => m.y);
+            const mnX = Math.min(...xs), mxX = Math.max(...xs) + CARD_W;
+            const mnY = Math.min(...ys), mxY = Math.max(...ys) + CARD_H;
+            const r = canvas.getBoundingClientRect();
+            sc = Math.min(r.width / (mxX - mnX + 80), r.height / (mxY - mnY + 80), 1);
+            tx = (r.width - (mxX - mnX) * sc) / 2 - mnX * sc;
+            ty = (r.height - (mxY - mnY) * sc) / 2 - mnY * sc;
+            applyT(); document.getElementById('zdsp').textContent = Math.round(sc * 100) + '%';
+        }
+
+        function resetV() { sc = 1; tx = 50; ty = 50; applyT(); document.getElementById('zdsp').textContent = '100%'; }
+
+        /* ── highlight / selection system ── */
+        let selId = null;
+
+        function getDescendants(id) {
+            // BFS: find all descendants via parent connections
+            const result = new Set();
+            const queue = [id];
+            while (queue.length) {
+                const cur = queue.shift();
+                C.forEach(c => {
+                    if (c.t === 'p' && c.p === cur && !result.has(c.c)) {
+                        result.add(c.c);
+                        // also add spouse of child
+                        C.forEach(cc => {
+                            if (cc.t === 'c') {
+                                if (cc.a === c.c) result.add(cc.b);
+                                if (cc.b === c.c) result.add(cc.a);
+                            }
+                        });
+                        queue.push(c.c);
+                    }
+                });
+            }
+            return result;
+        }
+
+        function getDirectChildren(id) {
+            const ch = new Set();
+            C.forEach(c => { if (c.t === 'p' && c.p === id) ch.add(c.c); });
+            return ch;
+        }
+
+        function applyHL(id) {
+            selId = id;
+            const desc = getDescendants(id);
+            const directCh = getDirectChildren(id);
+            // get spouse ids
+            const spouses = new Set();
+            C.forEach(c => {
+                if (c.t === 'c') {
+                    if (c.a === id) spouses.add(c.b);
+                    if (c.b === id) spouses.add(c.a);
+                }
+            });
+
+            // cards
+            Object.entries(els).forEach(([mid, el]) => {
+                const nid = parseInt(mid);
+                el.classList.remove('hl-self', 'hl-child', 'hl-dim', 'sel');
+                if (nid === id) {
+                    el.classList.add('hl-self', 'sel');
+                } else if (directCh.has(nid) || spouses.has(nid)) {
+                    el.classList.add('hl-child');
+                } else if (desc.has(nid)) {
+                    el.classList.add('hl-child');
+                } else {
+                    el.classList.add('hl-dim');
+                }
+            });
+
+            // lines — rebuild with highlight
+            drawL(id, desc, spouses);
+        }
+
+        function clearHL() {
+            selId = null;
+            Object.values(els).forEach(el => el.classList.remove('hl-self', 'hl-child', 'hl-dim', 'sel'));
+            drawL();
+        }
+
+        /* ── popup system ── */
+        let curPopup = null;
+
+        function showPopup(m, cardEl) {
+            hidePopup();
+            applyHL(m.id);
+
+            const pw = document.getElementById('popup-wrap');
+            const pu = document.createElement('div');
+            pu.className = 'popup';
+            pu.id = 'active-popup';
+
+            // position: above the card in world coordinates
+            const cx = m.x + CARD_W / 2;
+            const py = m.y - 10; // just above card top
+            pu.style.cssText = `left:${cx}px;top:${py}px;transform:translate(-50%,-100%);`;
+
+            const emo = m.g === 'f' ? '👩' : '👨';
+            pu.innerHTML = `
+    <button class="pu-cl" onclick="hidePopup()">✕</button>
+    <div class="pu-name">${emo} ${m.name}</div>
+    <div class="pu-role">${m.role}</div>
+    <div class="pu-btns">
+      <button class="pu-btn primary" onclick="openModal()">📋 বিস্তারিত</button>
+      <button class="pu-btn" onclick="hidePopup()">বাতিল</button>
+    </div>`;
+
+            pw.appendChild(pu);
+            curPopup = m;
+            // stop click-on-canvas from clearing when clicking popup
+            pu.addEventListener('click', e => e.stopPropagation());
+        }
+
+        function hidePopup() {
+            const old = document.getElementById('active-popup');
+            if (old) old.remove();
+            // Do not clearHL here! Selection stays when popup is closed or if modal opens
+            curPopup = null;
+        }
+
+        function openModal() {
+            if (!curPopup && !selId) return;
+            const m = curPopup || mp[selId];
+            if (!m) return;
+            const emo = m.g === 'f' ? '👩' : '👨';
+            document.getElementById('mav').innerHTML = m.photo ? `<img src="${m.photo}" alt="">` : emo;
+            document.getElementById('mnm').textContent = m.name;
+            document.getElementById('mrl').textContent = m.role;
+            document.getElementById('mms').textContent = m.ms || '—';
+            document.getElementById('mbo').textContent = m.born || '—';
+            document.getElementById('mdi').textContent = m.died || '—';
+            document.getElementById('mfd').style.display = m.died ? 'block' : 'none';
+            document.getElementById('mjb').textContent = m.job || '—';
+            const chCount = C.filter(c => c.t === 'p' && c.p === m.id).length;
+            document.getElementById('mch').textContent = chCount > 0 ? chCount + 'জন' : 'নেই';
+            document.getElementById('min').textContent = m.info || '—';
+            document.getElementById('modal-bg').classList.add('open');
+            // hide popup when modal is open
+            const old = document.getElementById('active-popup');
+            if (old) old.remove();
+        }
+
+        function closeModal() {
+            document.getElementById('modal-bg').classList.remove('open');
+            // Selection stays when modal is closed
+        }
+
+        function bgClick(e) {
+            if (e.target === document.getElementById('modal-bg')) closeModal();
+        }
+
+        // card click → toggle popup and highlight
+        function openP(m) {
+            if (selId === m.id) {
+                hidePopup();
+                clearHL();
+            } else {
+                showPopup(m, els[m.id]);
+            }
+        }
+        function closePanel() { hidePopup(); closeModal(); clearHL(); }
+
+        /* minimap */
+        function minimap() {
+            const mm = document.getElementById('mm');
+            const mW = mm.offsetWidth, mH = mm.offsetHeight;
+            const cv = document.getElementById('mmc');
+            const ctx = cv.getContext('2d');
+            ctx.clearRect(0, 0, mW, mH);
+            const xs = mem.map(m => m.x + CARD_W / 2), ys = mem.map(m => m.y + CARD_H / 2);
+            const wW = Math.max(...xs) + 60, wH = Math.max(...ys) + 60;
+            const sX = mW / wW, sY = mH / wH;
+            mem.forEach(m => {
+                ctx.fillStyle = m.g === 'f' ? '#804040' : '#405870';
+                ctx.beginPath();
+                ctx.arc((m.x + CARD_W / 2) * sX, (m.y + CARD_H / 2) * sY, 2, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            const r = canvas.getBoundingClientRect();
+            const vx = (-tx / sc) * sX, vy = (-ty / sc) * sY;
+            const vw = (r.width / sc) * sX, vh = (r.height / sc) * sY;
+            const vp = document.getElementById('mmvp');
+            vp.style.left = Math.max(0, vx) + 'px'; vp.style.top = Math.max(0, vy) + 'px';
+            vp.style.width = Math.min(vw, mW) + 'px'; vp.style.height = Math.min(vh, mH) + 'px';
+        }
+
+        /* print handling */
+        let _oldSc, _oldTx, _oldTy;
+        window.addEventListener('beforeprint', () => {
+            _oldSc = sc; _oldTx = tx; _oldTy = ty;
+            const xs = mem.map(m => m.x), ys = mem.map(m => m.y);
+            const w = typeof CARD_W !== 'undefined' ? CARD_W : 128;
+            const h = typeof CARD_H !== 'undefined' ? CARD_H : 116;
+            const mxX = Math.max(...xs) + w + 80;
+            const mxY = Math.max(...ys) + h + 80;
+
+            // Calculate scale to fit an A4 landscape width (approx 1050px in print dialog)
+            const printSc = 1050 / mxX;
+
+            document.body.classList.add('is-printing');
+            world.style.transformOrigin = '0 0';
+            world.style.transform = `scale(${printSc})`;
+            world.style.width = mxX + 'px';
+            world.style.height = mxY + 'px';
+            world.style.transition = 'none';
+        });
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('is-printing');
+            world.style.width = '';
+            world.style.height = '';
+            world.style.transformOrigin = '0 0';
+            sc = _oldSc; tx = _oldTx; ty = _oldTy;
+            applyT();
+            world.style.transition = '';
+        });
+        function printTree() { window.print(); }
+
+        /* image download */
+        function downloadImage() {
+            document.querySelector('.topbar').style.display = 'none';
+            if (document.querySelector('.zbx')) document.querySelector('.zbx').style.display = 'none';
+            if (document.getElementById('mm')) document.getElementById('mm').style.display = 'none';
+            if (document.querySelector('.hint')) document.querySelector('.hint').style.display = 'none';
+            if (document.querySelector('.legend')) document.querySelector('.legend').style.display = 'none';
+
+            const xs = mem.map(m => m.x), ys = mem.map(m => m.y);
+            const w = typeof CARD_W !== 'undefined' ? CARD_W : 128;
+            const h = typeof CARD_H !== 'undefined' ? CARD_H : 116;
+            const mxX = Math.max(...xs) + w + 80;
+            const mxY = Math.max(...ys) + h + 80;
+
+            const oldTransform = world.style.transform;
+            world.style.transform = 'none';
+            world.style.width = mxX + 'px';
+            world.style.height = mxY + 'px';
+
+            html2canvas(document.getElementById('world'), {
+                width: mxX,
+                height: mxY,
+                backgroundColor: '#0b0b0d',
+                scale: 1.5 // moderate high res
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Family_Tree.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                restoreUI(oldTransform);
+            }).catch(err => {
+                console.error(err);
+                alert("উফ! ছবি নিতে সমস্যা হয়েছে।");
+                restoreUI(oldTransform);
+            });
+
+            function restoreUI(ogTransform) {
+                document.querySelector('.topbar').style.display = '';
+                if (document.querySelector('.zbx')) document.querySelector('.zbx').style.display = '';
+                if (document.getElementById('mm')) document.getElementById('mm').style.display = '';
+                if (document.querySelector('.hint')) document.querySelector('.hint').style.display = '';
+                if (document.querySelector('.legend')) document.querySelector('.legend').style.display = '';
+                world.style.width = '';
+                world.style.height = '';
+                world.style.transform = ogTransform;
+            }
+        }
+
+        fitAll();
+        setTimeout(() => { minimap(); }, 150);
+    </script>
+</body>
+
+</html>
